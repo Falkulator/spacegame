@@ -23,8 +23,10 @@ module.exports = function(game) {
 
  		//bullet.body.collides(pandaCollisionGroup, hitPanda, this);
  		bullet.body.mass = 2;
- 		bullet.body.force.x = Math.cos(angle) * force;
- 		bullet.body.force.y = Math.sin(angle) * force;
+ 		bullet.body.velocity.x = Math.cos(angle) * force;
+ 		bullet.body.velocity.y = Math.sin(angle) * force;
+ 		console.log(force);
+
 
  	}
 

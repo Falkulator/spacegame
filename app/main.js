@@ -114,9 +114,10 @@ function update() {
 	
 	input.update();
 	if (input.aimFlag()) {
-		if (game.input.mousePointer.isDown) {
-			var bul = bullets.create(ship.x, ship.y, 'bullet');
-			bullet.fire(bul,10, input.getAngle());
+		if (game.input.mousePointer.isUp) {
+			var bul = bullets.create(ship.x, ship.y - 23, 'bullet');
+			bullet.fire(bul,300, input.getAngle());
+			input.setAimFalse();
 		}
 	} else {
 		camera.update();		
@@ -128,7 +129,7 @@ function update() {
 function render() {
 
     //game.debug.cameraInfo(game.camera, 32, 32);
-    game.debug.text(debug, 32, 32);
+    //game.debug.text(debug, 32, 32);
 
 }
 
@@ -141,8 +142,8 @@ function moveToPlanets(obj) {
 		xs = xs * xs;
 		var ys = obj.y - planet.y;
 		ys = ys * ys;
-		var dist = (xs + ys)/600000;
-		var speed = 1 / dist;
+		var dist = (xs + ys)/100000;
+		var speed = 1 / (dist*dist);
 
 		var angle = Math.atan2(planet.y - obj.y, planet.x - obj.x);
 
@@ -153,12 +154,12 @@ function moveToPlanets(obj) {
 	}, this);
 
 
-	forceChange(ship,fx,fy);  //start accelerateToObject on every ship
+	forceChange(obj,fx,fy);  //start accelerateToObject on every obj
 }
 
 function forceChange(obj, fx, fy) {
-	obj.body.force.x += arrSum(fx);
-	obj.body.force.y += arrSum(fy);
+	obj.body.force.x = arrSum(fx);
+	obj.body.force.y = arrSum(fy);
 
 	//debug += " y - " + obj.body.force.y + " | x - " + obj.body.force.x;
 }

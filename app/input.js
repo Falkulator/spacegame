@@ -73,6 +73,7 @@ module.exports = function(game) {
 		init: init,
 		update: update,
 		aimFlag: aimFlagCheck,
+		setAimFalse: setAimFalse,
 		getAngle: getAngle
 	}
  
