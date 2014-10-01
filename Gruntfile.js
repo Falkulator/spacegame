@@ -210,7 +210,7 @@ module.exports = function (grunt) {
  
   //grunt.registerTask('server', ['build', 'connect:livereload', 'open', 'watch']);
  
-  grunt.registerTask('build', ['sass', 'browserify', 'concat']);
+  grunt.registerTask('build', ['browserify', 'concat']);
 
   grunt.registerTask('launch', ['wait', 'open']);
 
