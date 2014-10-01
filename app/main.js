@@ -110,7 +110,7 @@ function create() {
 function update() {
 	ships.forEachAlive(moveToPlanets,this);
 	bullets.forEachAlive(moveToPlanets,this);
-
+	bullets.update();
 	
 	input.update();
 	if (input.aimFlag()) {
@@ -142,8 +142,9 @@ function moveToPlanets(obj) {
 		xs = xs * xs;
 		var ys = obj.y - planet.y;
 		ys = ys * ys;
-		var dist = (xs + ys)/100000;
-		var speed = 1 / (dist*dist);
+		var dist = (xs + ys)/400;
+		var mass = obj.body.mass * planet.body.mass;
+		var speed = mass / (dist*dist);
 
 		var angle = Math.atan2(planet.y - obj.y, planet.x - obj.x);
 

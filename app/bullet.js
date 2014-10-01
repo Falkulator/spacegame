@@ -2,7 +2,6 @@ module.exports = function(game) {
 	var bullets,
 		cGroups;
 
-
  	function init(c) {
  		cGroups = c;
  		bullets = game.add.group();
@@ -10,6 +9,7 @@ module.exports = function(game) {
  		bullets.enableBody = true;
     	bullets.physicsBodyType = Phaser.Physics.P2JS;
     	
+
     	return bullets;
 	
  	} 
@@ -21,17 +21,33 @@ module.exports = function(game) {
  								cGroups.planetCollisionGroup,
  								cGroups.bulletCollisionGroup]);
 
- 		//bullet.body.collides(pandaCollisionGroup, hitPanda, this);
+ 		bullet.body.collides(cGroups.planetCollisionGroup, hitPlanet, this);
  		bullet.body.mass = 2;
  		bullet.body.velocity.x = Math.cos(angle) * force;
  		bullet.body.velocity.y = Math.sin(angle) * force;
- 		console.log(force);
+
 
 
  	}
 
  	function update() {
+ 		bullets.forEachAlive(drawForce, this)
 
+ 	}
+
+ 	function hitPlanet(bullet) {
+
+
+ 	}
+
+ 	function drawForce(bullet) {
+ 		var graphics = game.add.graphics(0, 0);
+
+	    // set a fill and line style
+	    graphics.beginFill(0xFFFFFF);
+	    graphics.lineStyle(1, 0xffffff, 1);
+
+    	graphics.lineTo(100, 550);
  	}
 
 		
