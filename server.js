@@ -39,7 +39,7 @@ app.get("/", function(req, res){
 	res.render('index', {});
 });
 
-
+io.set('log level', 1);
 io.sockets.on('connection', function (socket) {
 
 	io.sockets.emit('blast', {msg:"<span style=\"color:red !important\">someone connected</span>"});

@@ -15,8 +15,8 @@ module.exports = function(game) {
 	
  	} 
 
- 	function fire(bullet, force, angle) {
-
+ 	function fire(shipx, shipy, force, angle) {
+		var bullet = bullets.create(shipx, shipy - 23, 'bullet');
  		bullet.body.setCollisionGroup(cGroups.bulletCollisionGroup);
  		bullet.body.collides([  cGroups.shipCollisionGroup,
  								cGroups.planetCollisionGroup,
@@ -32,7 +32,7 @@ module.exports = function(game) {
  	}
 
  	function update() {
- 		bullets.forEachAlive(drawForce, this)
+ 	
 
  	}
 
@@ -41,15 +41,15 @@ module.exports = function(game) {
 
  	}
 
- 	function drawForce(bullet) {
- 		var graphics = game.add.graphics(0, 0);
+ 	// function drawForce(bullet) {
+ 	// 	var graphics = game.add.graphics(0, 0);
 
-	    // set a fill and line style
-	    graphics.beginFill(0xFFFFFF);
-	    graphics.lineStyle(1, 0xffffff, 1);
+	 //    // set a fill and line style
+	 // //    graphics.beginFill(0xFFFFFF);
+	 // //    graphics.lineStyle(1, 0xffffff, 1);
 
-    	graphics.lineTo(100, 550);
- 	}
+  // //   	graphics.lineTo(100, 550);
+ 	// // }
 
 		
 		return {
@@ -150,29 +150,109 @@ module.exports = function(game) {
 		ship,
 		angle,
 		buttonaim,
-		buttonfire,
-		aimFlag = false;
+		baPosX = 600,
+		baPosY = 500,
+		bfPosX = 700,
+		bfPosY = 500,
+		buttonpow,
+		target,
+		power,
+		px,
+		py,
+		ui,
+		aimFlag = false,
+		powFlag = false,
+		fireFlag = false,
+		overview = false;
 
-	function init(arrw, buttonfire, buttonaim, shp) {
-		arrow = arrw;
-		ship = shp;
-		buttonfire = buttonfire;
-		buttonaim = buttonaim;
-		
-	    arrow.anchor.setTo(0.1, 0.5);
+	function init(arw, shp) {
+
+		//aim arrow
+		arrow = arw;
+		arrow.anchor.setTo(0.1, 0.5);
 	    arrow.alpha = 0;
 
-	    // create our virtual game controller buttons 
-	    buttonaim.fixedToCamera = true;  //our buttons should stay on the same place  
+	    //drag target
+		target = game.add.sprite(baPosX, baPosY, 'target');
+		target.alpha = 0;
+
+		//drag power meter
+		power = game.add.sprite(bfPosX,bfPosY, 'power');
+		power.alpha = 0;
+
+		ship = shp;
+
+
+		buttonaim = game.add.button(baPosX, baPosY, 'buttonaim', null, this, 0, 1, 0, 1);  //game, x, y, key, callback, callbackContext, overFrame, outFrame, downFrame, upFrame
+		buttonpow = game.add.button(bfPosX, bfPosY, 'buttonpow', null, this, 0, 1, 0, 1);
+		buttonfire = game.add.button(350, bfPosY, 'buttonfire', null, this, 0, 1, 0, 1);
+		buttonmap = game.add.button(20, bfPosY, 'buttonfire', null, this, 0, 1, 0, 1);
+
+
+	    
+	    buttonaim.fixedToCamera = true;
 	    buttonaim.events.onInputDown.add(setAimTrue);
 	    //buttonaim.events.onInputUp.add();
 
 	    
-	    buttonfire.fixedToCamera = true;
-	    buttonfire.events.onInputDown.add(setAimFalse);
-	    //buttonfire.events.onInputUp.add(function(){}); 
+	    buttonpow.fixedToCamera = true;
+	    buttonpow.events.onInputDown.add(setPowTrue);
+	    //buttonpow.events.onInputUp.add(function(){}); 
 
+	   	buttonfire.fixedToCamera = true;
+	    buttonfire.events.onInputUp.add(confirmFire);
+
+	    buttonmap.fixedToCamera = true;
+	    buttonmap.events.onInputUp.add(mapOverview);
 	    
+	}
+
+	function buttonScale() {
+		buttonfire.scale.setTo(2,2);
+	}
+
+	function confirmFire() {
+		fireFlag = true;
+	}
+
+	function mapOverview() {
+		if (overview) {
+			game.world.scale.setTo(1,1);
+			uiScale(1);
+			overview = false;
+		} else {
+			game.world.scale.setTo(0.3,0.3);
+			uiScale(3);
+			overview = true;
+		}
+		
+	}
+
+	function uiScale(x) {
+		buttonaim.scale.setTo(x,x);
+		buttonpow.scale.setTo(x,x);
+		buttonfire.scale.setTo(x,x);
+		buttonmap.scale.setTo(x,x);
+	}
+
+	function uiRemove() {
+		buttonaim.kill();
+		buttonpow.kill();
+		buttonfire.kill();
+		buttonmap.kill();
+	}
+
+	function uiRevive() {
+		buttonaim.revive();
+		buttonpow.revive();
+		buttonfire.revive();
+		buttonmap.revive();
+	}
+
+	function setPowTrue() {
+		px = game.input.x;
+		py = game.input.y;
+		powFlag = true;
 	}
 
 	function setAimTrue() {
@@ -180,7 +260,9 @@ module.exports = function(game) {
 
 	}
 
-	function setAimFalse() {
+	function setAim(x,y) {
+		target.x = x;
+		target.y = y;
 		aimFlag = false;
 
 	}
@@ -189,27 +271,59 @@ module.exports = function(game) {
 		return aimFlag;
 	}
 
-	function aimByPointer(pointer) {
-		angle = game.physics.arcade.angleToPointer(ship);
+	function powFlagCheck() {
+		return powFlag;
 	}
+
+	function fireFlagCheck() {
+		return fireFlag;
+	}
+
+	function setFireFalse() {
+		fireFlag = false;
+	}
+
 
 	function getAngle() {
 		return angle;
 	}
 
 	function update() {
+		
 		if (aimFlag) {
-			
-			arrow.alpha = 0.8;
+			arrow.alpha = 0.4;
+			target.alpha = 0.9;
+			if (game.input.mousePointer.isUp) {
+				//bullet.fire(ship.x, ship.y , 300, input.getAngle());
+				target.x = game.input.worldX;
+				target.y = game.input.worldY;
+				aimFlag = false;
+			}
+
+
+			target.x = game.input.worldX;
+			target.y = game.input.worldY;
+
 			arrow.x = ship.x;
 			arrow.y = ship.y;
-			aimByPointer(game.input.mousePointer);
-	    	aimByPointer(game.input.pointer1);
+			angle = game.physics.arcade.angleToPointer(ship);
 			arrow.rotation = angle;
 
 
+		} else if (powFlag) {
+			power.x = px + 30;
+			power.y = py;
+			power.fixedToCamera = true;
+			power.alpha = 0.6;
+			power.height = -game.physics.arcade.distanceBetween({x:px,y:py}, game.input); //phaser hack for shit ui
+
+			if (game.input.mousePointer.isUp) {
+				powFlag = false;
+			}
+
 		} else {
-			arrow.alpha = 0;
+			arrow.x = ship.x;
+			arrow.y = ship.y;
 		}
 
 	}
@@ -219,7 +333,9 @@ module.exports = function(game) {
 		init: init,
 		update: update,
 		aimFlag: aimFlagCheck,
-		setAimFalse: setAimFalse,
+		powFlag: powFlagCheck,
+		fireFlag: fireFlagCheck,
+		setFireFalse: setFireFalse,
 		getAngle: getAngle
 	}
  
@@ -239,6 +355,7 @@ var game = new Phaser.Game(800, 600, Phaser.CANVAS, 'phaser-example', { preload:
 var input = require('./input.js')(game);
 var camera = require('./camera.js')(game);
 var bullet = require('./bullet.js')(game);
+var planet = require('./planet.js')(game);
 
 
 
@@ -250,9 +367,12 @@ function preload() {
     game.load.image('ball', 'assets/shinyball.png');
     game.load.image('ship', 'assets/phaser-dude.png');
     game.load.image('arrow', 'assets/longarrow2.png');
+    game.load.image('target', 'assets/target.png');
     game.load.image('bullet', 'assets/pixel.png');
-    game.load.spritesheet('buttonfire', 'assets/buttons/button-round-a.png',96,96);
+    game.load.image('power', 'assets/fusia.png');
+    game.load.spritesheet('buttonpow', 'assets/buttons/button-round-a.png',96,96);
     game.load.spritesheet('buttonaim', 'assets/buttons/button-round-b.png',96,96);
+    game.load.spritesheet('buttonfire', 'assets/buttons/button-round-a.png',96,96);
 
 }
 
@@ -262,7 +382,7 @@ var ship;
 var ships;
 var planets;
 var bullets;
-var aimFlag = false;
+
 
 var debug;
 
@@ -270,6 +390,9 @@ function create() {
 
     //  Modify the world bounds
     game.world.setBounds(-2000, -2000, 4000, 4000);
+
+    //dev helper. remove in production
+    window.game = game;
     camera.init();
 
     game.physics.startSystem(Phaser.Physics.P2JS);
@@ -283,54 +406,27 @@ function create() {
     //  (which we do) - what this does is adjust the bounds to use its own collision group.
     game.physics.p2.updateBoundsCollisionGroup();
 
-    game.physics.p2.restitution = 0.5;
-    arrow = game.add.sprite(200, 450, 'arrow');
+    game.physics.p2.restitution = 0.55;
+    
 
     bullets = bullet.init(cGroups);
-
+    planets = planet.init(cGroups);
     
     ships = game.add.group();
     ships.enableBody = true;
     ships.physicsBodyType = Phaser.Physics.P2JS;
-    planets = game.add.group();
-    planets.enableBody = true;
-    planets.physicsBodyType = Phaser.Physics.P2JS;
-
+    
+    arrow = game.add.sprite(200, 450, 'arrow');
     ship = ships.create(0,10,'ship');
     ship.body.mass = 5;
+
     game.physics.p2.enable(ship, false);
-
-    // // Enable input.
-    // ship.inputEnabled = true;
-    // ship.input.start(0, true);
-    // ship.events.onInputDown.add(setAim);
-    // ship.events.onInputUp.add(launch);
-    
-	buttonaim = game.add.button(600, 500, 'buttonaim', null, this, 0, 1, 0, 1);  //game, x, y, key, callback, callbackContext, overFrame, outFrame, downFrame, upFrame
-	buttonfire = game.add.button(700, 500, 'buttonfire', null, this, 0, 1, 0, 1);
-	input.init(arrow, buttonfire, buttonaim, ship);
-
-    // game.camera.follow(ship, Phaser.Camera.FOLLOW_PLATFORMER);
-
-    
-     
-
-    for (var i = 0; i < 20; i++)
-    {
-
-        var planet = planets.create(game.world.randomX, game.world.randomY, 'ball');
-        planet.body.mass = 50000;
-        game.physics.p2.enable(planet);
-    }
-
-    var planet = planets.create(0, 100, 'ball');
-        planet.body.mass = 50000;
-        game.physics.p2.enable(planet);
-
-
 
 
    
+	input.init(arrow, ship);
+
+    
 
 }
 
@@ -339,16 +435,18 @@ function create() {
 function update() {
 	ships.forEachAlive(moveToPlanets,this);
 	bullets.forEachAlive(moveToPlanets,this);
+    planets.forEachAlive(dontMove, this);
 	bullets.update();
-	
 	input.update();
+
 	if (input.aimFlag()) {
-		if (game.input.mousePointer.isUp) {
-			var bul = bullets.create(ship.x, ship.y - 23, 'bullet');
-			bullet.fire(bul,300, input.getAngle());
-			input.setAimFalse();
-		}
-	} else {
+		
+	} else if (input.powFlag()) {
+
+    } else if (input.fireFlag()) {
+        bullet.fire(ship.x, ship.y , 300, input.getAngle());
+        input.setFireFalse();
+    } else {
 		camera.update();		
 	}
 	
@@ -360,6 +458,10 @@ function render() {
     //game.debug.cameraInfo(game.camera, 32, 32);
     //game.debug.text(debug, 32, 32);
 
+}
+
+function dontMove(obj) {
+    obj.body.setZeroVelocity();
 }
 
 function moveToPlanets(obj) {
@@ -384,7 +486,7 @@ function moveToPlanets(obj) {
 	}, this);
 
 
-	forceChange(obj,fx,fy);  //start accelerateToObject on every obj
+	forceChange(obj,fx,fy);  
 }
 
 function forceChange(obj, fx, fy) {
@@ -406,4 +508,57 @@ function arrSum(arr) {
 }
 
 
-},{"./bullet.js":1,"./camera.js":2,"./input.js":3}]},{},[1,2,3,4]);
+},{"./bullet.js":1,"./camera.js":2,"./input.js":3,"./planet.js":5}],5:[function(require,module,exports){
+module.exports = function(game) {
+	var planets,
+		cGroups;
+
+ 	function init(c) {
+ 		cGroups = c;
+ 		planets = game.add.group();
+
+ 		planets.enableBody = true;
+    	planets.physicsBodyType = Phaser.Physics.P2JS;
+    	var num = game.rnd.integerInRange(4, 10);
+		for (var i = 0; i < num; i++)
+	    {
+	    	var mass = game.rnd.integerInRange(500000, 2000000);
+	    	var rad = (mass/500000)*64;
+	    	var pscale = (rad/64)*4;//for now to scale small shinyball
+	        var planet = planets.create(game.world.randomX, game.world.randomY, 'ball');
+	        planet.body.mass = mass;
+	        planet.scale.set(pscale, pscale);
+	        planet.body.setCircle(rad);
+	        game.physics.p2.enable(planet);
+	    }
+
+	    var planet = planets.create(0, 140, 'ball');
+
+        game.physics.p2.enable(planet);
+        planet.body.mass = 500000;
+        planet.scale.set(4, 4);
+        planet.body.setCircle(64);
+        //planet.body.kinematic = true;
+
+    	return planets;
+	
+ 	} 
+
+
+
+ 	function update() {
+ 	
+
+ 	}
+
+
+		
+	return {
+		init: init,
+		update: update
+	}
+	 
+
+
+}
+},{}]},{},[1,2,3,4,5]);

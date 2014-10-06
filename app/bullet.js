@@ -14,8 +14,8 @@ module.exports = function(game) {
 	
  	} 
 
- 	function fire(bullet, force, angle) {
-
+ 	function fire(shipx, shipy, force, angle) {
+		var bullet = bullets.create(shipx, shipy - 23, 'bullet');
  		bullet.body.setCollisionGroup(cGroups.bulletCollisionGroup);
  		bullet.body.collides([  cGroups.shipCollisionGroup,
  								cGroups.planetCollisionGroup,
@@ -31,7 +31,7 @@ module.exports = function(game) {
  	}
 
  	function update() {
- 		bullets.forEachAlive(drawForce, this)
+ 	
 
  	}
 
@@ -40,15 +40,15 @@ module.exports = function(game) {
 
  	}
 
- 	function drawForce(bullet) {
- 		var graphics = game.add.graphics(0, 0);
+ 	// function drawForce(bullet) {
+ 	// 	var graphics = game.add.graphics(0, 0);
 
-	    // set a fill and line style
-	    graphics.beginFill(0xFFFFFF);
-	    graphics.lineStyle(1, 0xffffff, 1);
+	 //    // set a fill and line style
+	 // //    graphics.beginFill(0xFFFFFF);
+	 // //    graphics.lineStyle(1, 0xffffff, 1);
 
-    	graphics.lineTo(100, 550);
- 	}
+  // //   	graphics.lineTo(100, 550);
+ 	// // }
 
 		
 		return {

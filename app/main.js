@@ -10,6 +10,7 @@ var game = new Phaser.Game(800, 600, Phaser.CANVAS, 'phaser-example', { preload:
 var input = require('./input.js')(game);
 var camera = require('./camera.js')(game);
 var bullet = require('./bullet.js')(game);
+var planet = require('./planet.js')(game);
 
 
 
@@ -21,9 +22,12 @@ function preload() {
     game.load.image('ball', 'assets/shinyball.png');
     game.load.image('ship', 'assets/phaser-dude.png');
     game.load.image('arrow', 'assets/longarrow2.png');
+    game.load.image('target', 'assets/target.png');
     game.load.image('bullet', 'assets/pixel.png');
-    game.load.spritesheet('buttonfire', 'assets/buttons/button-round-a.png',96,96);
+    game.load.image('power', 'assets/fusia.png');
+    game.load.spritesheet('buttonpow', 'assets/buttons/button-round-a.png',96,96);
     game.load.spritesheet('buttonaim', 'assets/buttons/button-round-b.png',96,96);
+    game.load.spritesheet('buttonfire', 'assets/buttons/button-round-a.png',96,96);
 
 }
 
@@ -33,7 +37,7 @@ var ship;
 var ships;
 var planets;
 var bullets;
-var aimFlag = false;
+
 
 var debug;
 
@@ -41,6 +45,9 @@ function create() {
 
     //  Modify the world bounds
     game.world.setBounds(-2000, -2000, 4000, 4000);
+
+    //dev helper. remove in production
+    window.game = game;
     camera.init();
 
     game.physics.startSystem(Phaser.Physics.P2JS);
@@ -54,54 +61,27 @@ function create() {
     //  (which we do) - what this does is adjust the bounds to use its own collision group.
     game.physics.p2.updateBoundsCollisionGroup();
 
-    game.physics.p2.restitution = 0.5;
-    arrow = game.add.sprite(200, 450, 'arrow');
+    game.physics.p2.restitution = 0.55;
+    
 
     bullets = bullet.init(cGroups);
-
+    planets = planet.init(cGroups);
     
     ships = game.add.group();
     ships.enableBody = true;
     ships.physicsBodyType = Phaser.Physics.P2JS;
-    planets = game.add.group();
-    planets.enableBody = true;
-    planets.physicsBodyType = Phaser.Physics.P2JS;
-
+    
+    arrow = game.add.sprite(200, 450, 'arrow');
     ship = ships.create(0,10,'ship');
     ship.body.mass = 5;
+
     game.physics.p2.enable(ship, false);
-
-    // // Enable input.
-    // ship.inputEnabled = true;
-    // ship.input.start(0, true);
-    // ship.events.onInputDown.add(setAim);
-    // ship.events.onInputUp.add(launch);
-    
-	buttonaim = game.add.button(600, 500, 'buttonaim', null, this, 0, 1, 0, 1);  //game, x, y, key, callback, callbackContext, overFrame, outFrame, downFrame, upFrame
-	buttonfire = game.add.button(700, 500, 'buttonfire', null, this, 0, 1, 0, 1);
-	input.init(arrow, buttonfire, buttonaim, ship);
-
-    // game.camera.follow(ship, Phaser.Camera.FOLLOW_PLATFORMER);
-
-    
-     
-
-    for (var i = 0; i < 20; i++)
-    {
-
-        var planet = planets.create(game.world.randomX, game.world.randomY, 'ball');
-        planet.body.mass = 50000;
-        game.physics.p2.enable(planet);
-    }
-
-    var planet = planets.create(0, 100, 'ball');
-        planet.body.mass = 50000;
-        game.physics.p2.enable(planet);
-
-
 
 
    
+	input.init(arrow, ship);
+
+    
 
 }
 
@@ -110,16 +90,18 @@ function create() {
 function update() {
 	ships.forEachAlive(moveToPlanets,this);
 	bullets.forEachAlive(moveToPlanets,this);
+    planets.forEachAlive(dontMove, this);
 	bullets.update();
-	
 	input.update();
+
 	if (input.aimFlag()) {
-		if (game.input.mousePointer.isUp) {
-			var bul = bullets.create(ship.x, ship.y - 23, 'bullet');
-			bullet.fire(bul,300, input.getAngle());
-			input.setAimFalse();
-		}
-	} else {
+		
+	} else if (input.powFlag()) {
+
+    } else if (input.fireFlag()) {
+        bullet.fire(ship.x, ship.y , 300, input.getAngle());
+        input.setFireFalse();
+    } else {
 		camera.update();		
 	}
 	
@@ -131,6 +113,10 @@ function render() {
     //game.debug.cameraInfo(game.camera, 32, 32);
     //game.debug.text(debug, 32, 32);
 
+}
+
+function dontMove(obj) {
+    obj.body.setZeroVelocity();
 }
 
 function moveToPlanets(obj) {
@@ -155,7 +141,7 @@ function moveToPlanets(obj) {
 	}, this);
 
 
-	forceChange(obj,fx,fy);  //start accelerateToObject on every obj
+	forceChange(obj,fx,fy);  
 }
 
 function forceChange(obj, fx, fy) {
